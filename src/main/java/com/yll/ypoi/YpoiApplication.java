@@ -1,7 +1,5 @@
 package com.yll.ypoi;
 
-import com.yll.ypoi.excel.ExcelHandler;
-import com.yll.ypoi.pojo.Student;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -18,8 +16,6 @@ public class YpoiApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(YpoiApplication.class, args);
-        Student student = new Student();
-        ExcelHandler excelHandler = new ExcelHandler();
-        excelHandler.getExcelHeader(student);
     }
+
 }
