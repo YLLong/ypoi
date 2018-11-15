@@ -1,14 +1,21 @@
 package com.yll.ypoi.controller;
 
+import com.yll.ypoi.pojo.Teacher;
 import com.yll.ypoi.service.ExcelExportService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -37,14 +44,17 @@ public class ExcelController {
             response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
             response.addHeader("charset", "utf-8");
             response.addHeader("Pragma", "no-cache");
-            String encodeName = URLEncoder.encode("测试", StandardCharsets.UTF_8.toString());
+            String encodeName = URLEncoder.encode("测试.xls", StandardCharsets.UTF_8.toString());
             response.setHeader("Content-Disposition", "attachment; filename=\"" + encodeName + "\"; filename*=utf-8''" + encodeName);
             List<Object> objects = new ArrayList<>();
+            Teacher teacher = new Teacher();
+            objects.add(teacher);
             HSSFWorkbook workbook = excelExportService.createWorkbook(objects);
             workbook.write(response.getOutputStream());
             servletOutputStream = response.getOutputStream();
             response.flushBuffer();
         } catch (Exception e) {
+            log.error("下载模板失败", e);
             e.printStackTrace();
         } finally {
             try {
@@ -52,10 +62,38 @@ public class ExcelController {
                     servletOutputStream.close();
                 }
             } catch (Exception e) {
-                log.error("下载模板失败", e);
                 e.printStackTrace();
             }
         }
+    }
+
+    @GetMapping("/importExcel")
+    public String importExcelTmp(MultipartFile file) throws IOException {
+        HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(file.getInputStream()));
+        // 获取sheet数
+        int numberOfSheets = workbook.getNumberOfSheets();
+        for (int i = 0; i < numberOfSheets; i++) {
+            HSSFSheet sheetAt = workbook.getSheetAt(i);
+            // 获取sheet的行数
+            int physicalNumberOfRows = sheetAt.getPhysicalNumberOfRows();
+            Teacher teacher;
+            for (int j = 0; j < physicalNumberOfRows; j++) {
+                if (j == 0) {
+                    // 第一行是表头
+                    continue;
+                }
+                // 获取每一行
+                HSSFRow row = sheetAt.getRow(j);
+                // 每行单元格数
+                int physicalNumberOfCells = row.getPhysicalNumberOfCells();
+                teacher = new Teacher();
+                for (int k = 0; k < physicalNumberOfCells; k++) {
+                    // 获取每一个单元格
+                    HSSFCell cell = row.getCell(k);
+                }
+            }
+        }
+        return "";
     }
 
 }
