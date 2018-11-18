@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yll.ypoi.mapper.TeacherMapper">
+    <insert id="insertExcelData" parameterType="list">
+        insert into teacher_table (tea_id, tea_name, tea_age) values
+        <foreach collection="mapList" item="map" separator=",">
+            (#{map.teaId}, #{map.teaName}, #{map.teaAge})
+        </foreach>
+    </insert>
+</mapper>

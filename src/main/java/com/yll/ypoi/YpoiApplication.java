@@ -1,5 +1,6 @@
 package com.yll.ypoi;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @version: V1.0
  */
 @SpringBootApplication
+@MapperScan("com.yll.ypoi.mapper")
 public class YpoiApplication {
 
     public static void main(String[] args) {

@@ -1,13 +1,17 @@
 package com.yll.ypoi.utils;
 
+import com.yll.ypoi.annotation.Excel;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.hssf.usermodel.HSSFDataFormatter;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,24 +27,44 @@ import java.util.Map;
 public class ExcelImportUtil {
 
     /**
+     * @title: getFilds
+     * @description: 获取类中有自定义注解的属性
+     * @author: akira
+     * @date: Created in 2018/11/17 15:11
+     * @param clazz
+     * @throws:
+     * @return: java.util.List<java.lang.reflect.Field>
+     */
+    public List<Field> getFilds(Class<?> clazz) {
+        List<Field> fieldList = new ArrayList<>();
+        // 获取类的所有属性
+        Field[] declaredFields = clazz.getDeclaredFields();
+        // 出掉没有 excel 注解的属性
+        for (int i = 0; i < declaredFields.length; i++) {
+            Field declaredField = declaredFields[i];
+            if (declaredField.isAnnotationPresent(Excel.class)) {
+                fieldList.add(declaredField);
+            }
+        }
+        return fieldList;
+    }
+
+    /**
      * @title: packData
      * @description: 封装入库的单个实体
      * @author: akira
      * @date: Created in 2018/11/15 21:17
-     * @param fields 对象属性数组
-     * @param row    excel 行
+     * @param clazz 对象
+     * @param row excel 行
      * @throws:
      * @return: java.util.Map<java.lang.String, java.lang.Object>
      */
-
-    public Map<String, Object> packData(Field[] fields, Row row) {
-        if (null == fields || fields.length < 0) {
-            log.error("对象属性不存在");
-            return null;
-        }
+    public Map<String, Object> packData(Class<?> clazz, Row row) {
         Map<String, Object> dataMap = new HashMap<>();
-        for (int i = 0; i < fields.length; i++) {
-            dataMap.put(fields[i].getName(), getValue(fields[i], row.getCell(i)));
+        List<Field> filds = getFilds(clazz);
+        for (int i = 0; i < filds.size(); i++) {
+            Field field =  filds.get(i);
+            dataMap.put(field.getName(), getValue(field, row.getCell(i)));
         }
         return dataMap;
     }
@@ -56,8 +80,36 @@ public class ExcelImportUtil {
      * @return: T
      */
     public <T> T getValue(Field field, Cell cell) {
-        HSSFDataFormatter hssfDataFormatter = new HSSFDataFormatter();
-        String cellValue = hssfDataFormatter.formatCellValue(cell);
+        String cellValue = "";
+        switch (cell.getCellType()) {
+            case NUMERIC:
+                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    cellValue = sdf.format(org.apache.poi.ss.usermodel.DateUtil.getJavaDate(cell.getNumericCellValue())).toString();
+                } else {
+                    DataFormatter dataFormatter = new DataFormatter();
+                    cellValue = dataFormatter.formatCellValue(cell);
+                }
+                break;
+            case BLANK:
+                cellValue = "";
+                break;
+            case STRING:
+                cellValue = cell.getStringCellValue();
+                break;
+            case BOOLEAN:
+                cellValue += cell.getBooleanCellValue();
+                break;
+            case FORMULA:
+                cellValue += cell.getCellFormula();
+                break;
+            case ERROR:
+                cellValue = "非法字符";
+                break;
+            default:
+                cellValue = "未知类型";
+
+        }
         if (field.getType() == Integer.class) {
             return (T) Integer.valueOf(cellValue);
         }
