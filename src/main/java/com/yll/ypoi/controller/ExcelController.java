@@ -3,12 +3,9 @@ package com.yll.ypoi.controller;
 import com.yll.ypoi.mapper.TeacherMapper;
 import com.yll.ypoi.pojo.Teacher;
 import com.yll.ypoi.service.ExcelExportService;
-import com.yll.ypoi.utils.ExcelImportUtil;
+import com.yll.ypoi.service.ExcelImportService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -40,7 +36,7 @@ public class ExcelController {
     @Autowired
     ExcelExportService excelExportService;
     @Autowired
-    ExcelImportUtil excelImportUtil;
+    ExcelImportService excelImportService;
     @Autowired
     TeacherMapper teacherMapper;
 
@@ -77,32 +73,8 @@ public class ExcelController {
 
     @PostMapping("/importExcel")
     public String importExcelTmp(MultipartFile file) throws IOException {
-        HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(file.getInputStream()));
-        // 获取sheet数
-        int numberOfSheets = workbook.getNumberOfSheets();
-        for (int i = 0; i < numberOfSheets; i++) {
-            List<Map<String, Object>> dataIn = new ArrayList<>();
-            HSSFSheet sheetAt = workbook.getSheetAt(i);
-            // 获取sheet的行数
-            int physicalNumberOfRows = sheetAt.getPhysicalNumberOfRows();
-            Teacher teacher;
-            for (int j = 0; j < physicalNumberOfRows; j++) {
-                if (j == 0) {
-                    // 第一行是表头
-                    continue;
-                }
-                // 获取每一行
-                HSSFRow row = sheetAt.getRow(j);
-                teacher = new Teacher();
-                Field[] fields = teacher.getClass().getDeclaredFields();
-                System.out.println(fields);
-                Map<String, Object> objectMap = excelImportUtil.packData(Teacher.class, row);
-                dataIn.add(objectMap);
-            }
-            System.out.println("保存数据到数据库=======" + dataIn);
-            Integer integer = teacherMapper.insertExcelData(dataIn);
-            System.out.println("成功插入 " + integer + " 条数据");
-        }
+        List<Map<String, Object>> dataListInputStream = excelImportService.getDataListInputStream(file.getInputStream(), Teacher.class);
+        System.out.println(dataListInputStream);
         return "SUCCESS";
     }
 
