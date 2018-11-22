@@ -1,6 +1,7 @@
 package com.yll.ypoi.pojo;
 
 import com.yll.ypoi.annotation.Excel;
+import com.yll.ypoi.annotation.Sheet;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,6 +15,7 @@ import java.io.Serializable;
  * @version: V1.0
  */
 @Data
+@Sheet(name = "教师表")
 public class Teacher implements Serializable {
 
     private Integer id;

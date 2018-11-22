@@ -8,23 +8,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @className: Excel
- * @description: 自定义注解
- * @author: yys1778
- * @date: Created in 2018/11/14 16:16
- * @modify by: yys1778
+ * @className: Sheet
+ * @description: sheet名注解
+ * @author: akira
+ * @date: Created in 2018/11/22 22:50
+ * @modify by: akira
  * @version: V1.0
  */
 @Component
-@Target({ElementType.FIELD})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Excel {
+public @interface Sheet {
 
-    /**
-     * 表头
-     */
     String name();
-
-    String remark() default "";
 
 }
